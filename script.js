@@ -1,6 +1,8 @@
 (function () {
   const MESSAGE = "Te Amo";
-  const NUM_WORDS = 50;
+  const MIN_WORDS = 25;
+  const MAX_WORDS = 120;
+  const WORDS_PER_PX = 0.06;
 
   function heartPoint(t) {
     const x = 16 * Math.pow(Math.sin(t), 3);
@@ -13,14 +15,22 @@
     return { x, y };
   }
 
-  function buildLayer(layer) {
+  function getNumWords() {
+    const minDim = Math.min(window.innerWidth, window.innerHeight);
+    return Math.max(
+      MIN_WORDS,
+      Math.min(MAX_WORDS, Math.round(minDim * WORDS_PER_PX))
+    );
+  }
+
+  function buildLayer(layer, numWords) {
     if (!layer) return;
     const scale = Math.min(window.innerWidth, window.innerHeight) * 0.022;
 
     const fragment = document.createDocumentFragment();
 
-    for (let i = 0; i < NUM_WORDS; i++) {
-      const t = (i / NUM_WORDS) * Math.PI * 2;
+    for (let i = 0; i < numWords; i++) {
+      const t = (i / numWords) * Math.PI * 2;
       const { x, y } = heartPoint(t);
 
       const word = document.createElement("span");
@@ -78,14 +88,23 @@
     "layer-main",
   ];
 
-  layerIds.forEach((id) => buildLayer(document.getElementById(id)));
-  buildBackgroundHearts(document.getElementById("bg-hearts"));
-
-  window.addEventListener("resize", () => {
+  function render() {
+    const numWords = getNumWords();
     layerIds.forEach((id) => {
       const layer = document.getElementById(id);
-      if (layer) layer.innerHTML = "";
-      buildLayer(layer);
+      if (layer) {
+        layer.innerHTML = "";
+        buildLayer(layer, numWords);
+      }
     });
+  }
+
+  render();
+  buildBackgroundHearts(document.getElementById("bg-hearts"));
+
+  let resizeTimer;
+  window.addEventListener("resize", () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(render, 150);
   });
 })();
